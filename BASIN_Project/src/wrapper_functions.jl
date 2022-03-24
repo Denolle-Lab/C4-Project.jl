@@ -88,33 +88,49 @@ end
 #################### Downloads and Correlates day of data ###########################
 function correlate_day(dd::Date, params::Dict=params)
     """ Wrapper function for daily correlations"""
-    path = join([Dates.year(dd),lpad(Dates.dayofyear(dd),3,"0")],"_") # Yeilds "YEAR_JDY"
+    path = join([Dates.year(dd),lpad(Dates.dayofyear(dd),3,"0")],"_") # Yields "YEAR_JDY"
     @eval @everywhere path = $path
 
     # unpack needed params
     sources, maxlag, OUTDIR, yr, aws = params["sources"], params["maxlag"], params["OUTDIR"], params["yr"], params["aws"]
 
-    # get filepaths for SCEDC source stations 
-    scedc_files = get_scedc_files(dd, params)
-    filter!(x -> any(occursin.(sources, x)), scedc_files)
+    # here download the data from S3
+    if params["aws"!="local"]
+        # get filepaths for SCEDC source stations 
+        scedc_files = get_scedc_files(dd, params)
+        filter!(x -> any(occursin.(sources, x)), scedc_files)
 
-    # filepaths for nodes
-    filelist_b = S3Path("s3://seisbasin/continuous_waveforms/$(yr)/$(path)/", config=aws) # use new AWS functions
-    filelist_basin = joinpath.("continuous_waveforms/$(yr)/$(path)/", 
-                                convert.(String, readdir(filelist_b))) # add directory 
-    println("There are $(length(filelist_basin)) node files available for $path")
-    # download scedc and seisbasin data
-    try
-        ec2download(aws, "scedc-pds", scedc_files, OUTDIR)
-        ec2download(aws, "seisbasin", filelist_basin, OUTDIR)
-        println("Download complete!")
-    catch e
-        println(e)
-        println("Failed to process for $path. Continuing to next day.")
-        return 1
+        # filepaths for nodes
+        filelist_b = S3Path("s3://seisbasin/continuous_waveforms/$(yr)/$(path)/", config=aws) # use new AWS functions
+        filelist_basin = joinpath.("continuous_waveforms/$(yr)/$(path)/", 
+                                    convert.(String, readdir(filelist_b))) # add directory 
+        println("There are $(length(filelist_basin)) node files available for $path")
+        # download scedc and seisbasin data
+        try
+            ec2download(aws, "scedc-pds", scedc_files, OUTDIR)
+            ec2download(aws, "seisbasin", filelist_basin, OUTDIR)
+            println("Download complete!")
+        catch e
+            println(e)
+            println("Failed to process for $path. Continuing to next day.")
+            return 1
+        end
+    else
+
+          # filepaths for nodes
+        filepath = readdir("$(params["DATADIR"])/$(yr)/$(path)/") # use new AWS functions
+        newdir = jointpath("$(params["OUTDIR"])/continuous_waveforms/$(yr)/$(path)/") # use new AWS functions
+        cp(filepath,newdir)
+        filelist_basin = readdir(newdir)
+
+
     end
     # preprocess data
-    allf = glob("continuous_waveforms/$yr/$path/*", "/home/ubuntu/data/")
+    if params["aws"!="local"]
+    allf = glob("continuous_waveforms/$yr/$path/*", "/home/ubuntu/data/") # if on aws
+    else
+    allf = glob("continuous_waveforms/$yr/$path/*", "$OUTDIR") # if on local
+    end
     broadbands = filter(x -> any(occursin.(sources, x)) && !occursin("Q0066",x), allf)
     accelerometers = [f for f in allf if !any(occursin.(f, broadbands))]
 
@@ -123,7 +139,11 @@ function correlate_day(dd::Date, params::Dict=params)
     println("Preprocessing Completed in $(T_b + T_a) seconds.")
 
     # get indices for block correlation
+    if params["aws"!="local"]
     fft_paths = glob("ffts/$path/*", "/home/ubuntu/")
+    else
+    fft_paths = glob("ffts/$path/*", "$OUTDIR")
+    end
     sources = filter(f -> any(occursin.(sources, f)), fft_paths)
     recievers = filter(f -> !any(occursin.(sources, f)), fft_paths)
     print("There are $(length(recievers)) available for correlation.")
@@ -135,7 +155,11 @@ function correlate_day(dd::Date, params::Dict=params)
         Tcorrelate = @elapsed pmap(rec_files -> correlate_block(sources, collect(rec_files), maxlag), reciever_blocks)
         println("$(length(reciever_blocks)) blocks correlated in $Tcorrelate seconds for $path.")
     end
+    if params["aws"!="local"] # if on aws, remove data from EC2 instance
     rm("/home/ubuntu/data/continuous_waveforms", recursive=true) # cleanup raw data
+    else
+    rm("$OUTDIR/continuous_waveforms", recursive=true) # cleanup raw data on the SSD working disk
+    end
 end
 
 ######################## Stacking Routine ############################
