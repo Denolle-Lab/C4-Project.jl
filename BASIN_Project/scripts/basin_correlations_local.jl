@@ -16,7 +16,7 @@ addprocs()
 
 # add BASIN routines
 @everywhere include("../src/BASIN_local.jl")
-@everywhere using .BASIN
+@everywhere using .BASIN_local
 ##########################################################
 
 

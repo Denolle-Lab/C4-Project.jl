@@ -95,7 +95,7 @@ function correlate_day(dd::Date, params::Dict=params)
     sources, maxlag, OUTDIR, yr, aws = params["sources"], params["maxlag"], params["OUTDIR"], params["yr"], params["aws"]
 
     # here download the data from S3
-    if params["aws"!="local"]
+    if aws!="local"
         # get filepaths for SCEDC source stations 
         scedc_files = get_scedc_files(dd, params)
         filter!(x -> any(occursin.(sources, x)), scedc_files)
@@ -118,15 +118,16 @@ function correlate_day(dd::Date, params::Dict=params)
     else
 
           # filepaths for nodes
-        filepath = readdir("$(params["DATADIR"])/$(yr)/$(path)/") # use new AWS functions
-        newdir = jointpath("$(params["OUTDIR"])/continuous_waveforms/$(yr)/$(path)/") # use new AWS functions
+        filepath = joinpath.("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/", 
+        convert.(String, readdir("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"))) # add directory 
+        newdir = joinpath("$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/") # use new AWS functions
         cp(filepath,newdir)
         filelist_basin = readdir(newdir)
 
 
     end
     # preprocess data
-    if params["aws"!="local"]
+    if params["aws"]!="local"
     allf = glob("continuous_waveforms/$yr/$path/*", "/home/ubuntu/data/") # if on aws
     else
     allf = glob("continuous_waveforms/$yr/$path/*", "$OUTDIR") # if on local
@@ -139,7 +140,7 @@ function correlate_day(dd::Date, params::Dict=params)
     println("Preprocessing Completed in $(T_b + T_a) seconds.")
 
     # get indices for block correlation
-    if params["aws"!="local"]
+    if params["aws"]!="local"
     fft_paths = glob("ffts/$path/*", "/home/ubuntu/")
     else
     fft_paths = glob("ffts/$path/*", "$OUTDIR")
@@ -155,7 +156,7 @@ function correlate_day(dd::Date, params::Dict=params)
         Tcorrelate = @elapsed pmap(rec_files -> correlate_block(sources, collect(rec_files), maxlag), reciever_blocks)
         println("$(length(reciever_blocks)) blocks correlated in $Tcorrelate seconds for $path.")
     end
-    if params["aws"!="local"] # if on aws, remove data from EC2 instance
+    if params["aws"]!="local" # if on aws, remove data from EC2 instance
     rm("/home/ubuntu/data/continuous_waveforms", recursive=true) # cleanup raw data
     else
     rm("$OUTDIR/continuous_waveforms", recursive=true) # cleanup raw data on the SSD working disk
