@@ -11,10 +11,11 @@ using Distributed, PyCall # add distributed computing
 addprocs()
 
 # send packages to all cores
-@everywhere using SeisIO, SeisNoise, Dates, CSV, DataFrames,SCEDC, AWS, StructArrays, AWSS3, Statistics, JLD2, Glob, AbstractFFTs, HDF5
+# @everywhere using SeisIO, SeisNoise, Dates, CSV, DataFrames,SCEDC, AWS, StructArrays, AWSS3, Statistics, JLD2, Glob, AbstractFFTs, HDF5
+@everywhere using SeisIO, SeisNoise, Dates, CSV, DataFrames, StructArrays, Statistics, JLD2, Glob, AbstractFFTs, HDF5
 
 # add BASIN routines
-@everywhere include("../src/BASIN.jl")
+@everywhere include("../src/BASIN_local.jl")
 @everywhere using .BASIN
 ##########################################################
 
@@ -28,7 +29,7 @@ half_win, water_level = 30, 0.01
 network = "CI"
 channel1 = "BH?"
 channel2 = "HH?"
-OUTDIR = "/mnt/DATA0/BASIN"   # where temporary data and code sit.
+OUTDIR = "/mnt/DATA0/BASIN"   # where temporary data gets read
 DATADIR = "/mnt/DATA3/BASIN"  # where data archive sit.
 rootdir = "~/C4-project/"   # where the codes sit
 sources = ["TA2","LPC","CJM", "IPT", "SVD", "SNO", "DEV", "VINE", "ROPE", 
