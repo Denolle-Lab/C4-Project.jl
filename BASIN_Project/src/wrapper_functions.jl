@@ -6,7 +6,7 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
         Load raw seisdata file and process, saving to fft per frequency
     """
     # unpack needed params
-    rootdir, samp_rate, all_stations = params["rootdir"], params["fs"], params["all_stations"]
+    rootdir, OUTDIR, samp_rate, all_stations = params["rootdir"], params["OUTDIR"], params["fs"], params["all_stations"]
     freqmin, freqmax, cc_step, cc_len = params["freqmin"], params["freqmax"], params["cc_step"], params["cc_len"]
     half_win, water_level = params["half_win"], params["water_level"]
 
@@ -43,7 +43,7 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
                 end
                 coherence!(FFT,half_win, water_level) # try no coherence ??
                 try # save fft 
-                    root_fft = joinpath(rootdir, "ffts/$path/")
+                    root_fft = joinpath(OUTDIR, "ffts/$path/")
                     save_fft(FFT, root_fft)
                 catch e
                     println(e)
@@ -115,13 +115,15 @@ function correlate_day(dd::Date, params::Dict=params)
             println("Failed to process for $path. Continuing to next day.")
             return 1
         end
-    else
+    else  # Local / workstation use
 
           # filepaths for nodes
-        filepath = joinpath.("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/", 
-        convert.(String, readdir("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"))) # add directory 
-        newdir = joinpath("$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/") # use new AWS functions
-        cp(filepath,newdir)
+        filepath = "$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"
+        # convert.(String, readdir("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"))) # add directory 
+        println(filepath)
+        newdir = "$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/"
+        println(newdir)
+        cp(filepath, newdir)
         filelist_basin = readdir(newdir)
 
 
@@ -159,7 +161,7 @@ function correlate_day(dd::Date, params::Dict=params)
     if params["aws"]!="local" # if on aws, remove data from EC2 instance
     rm("/home/ubuntu/data/continuous_waveforms", recursive=true) # cleanup raw data
     else
-    rm("$OUTDIR/continuous_waveforms", recursive=true) # cleanup raw data on the SSD working disk
+    rm("$OUTDIR/continuous_waveforms/$yr/$path", recursive=true) # cleanup raw data on the SSD working disk
     end
 end
 

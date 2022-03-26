@@ -31,10 +31,11 @@ channel1 = "BH?"
 channel2 = "HH?"
 OUTDIR = "/mnt/DATA0/BASIN"   # where temporary data gets read
 DATADIR = "/mnt/DATA3/BASIN"  # where data archive sit.
+@assert OUTDIR != DATADIR "OUTDIR and DATADIR must be different"    # must be different so that outdir can be safely deleted at the end.
 rootdir = "~/C4-project/"   # where the codes sit
-sources = ["TA2","LPC","CJM", "IPT", "SVD", "SNO", "DEV", "VINE", "ROPE", 
-        "ARNO", "LUCI", "ROUF", "KUZD", "ALLI", "CHN", "USB", "Q0048", "Q0066",
-        "PASC","RUS","FUL","SRN","BRE"]
+sources = ["SVD"] #["TA2","LPC","CJM", "IPT", "SVD", "SNO", "DEV", "VINE", "ROPE", 
+        #"ARNO", "LUCI", "ROUF", "KUZD", "ALLI", "CHN", "USB", "Q0048", "Q0066",
+        #"PASC","RUS","FUL","SRN","BRE"]
 all_stations = DataFrame(CSV.File("../../docs/updated_sources.csv"))
 
 ##########################################################
