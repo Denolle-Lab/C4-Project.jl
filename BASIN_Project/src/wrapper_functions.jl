@@ -123,7 +123,7 @@ function correlate_day(dd::Date, params::Dict=params)
         println(filepath)
         newdir = "$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/"
         println(newdir)
-        cp(filepath, newdir)
+        cp(filepath, newdir,force=true)
         filelist_basin = readdir(newdir)
 
 
