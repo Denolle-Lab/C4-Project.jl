@@ -32,7 +32,7 @@ channel2 = "HH?"
 OUTDIR = "/mnt/DATA0/BASIN"   # where temporary data gets read
 DATADIR = "/mnt/DATA3/BASIN"  # where data archive sit.
 @assert OUTDIR != DATADIR "OUTDIR and DATADIR must be different"    # must be different so that outdir can be safely deleted at the end.
-rootdir = "~/C4-project/"   # where the codes sit
+rootdir = "~/C4-Project.jl/"   # where the codes sit
 sources = ["SVD"] #["TA2","LPC","CJM", "IPT", "SVD", "SNO", "DEV", "VINE", "ROPE", 
         #"ARNO", "LUCI", "ROUF", "KUZD", "ALLI", "CHN", "USB", "Q0048", "Q0066",
         #"PASC","RUS","FUL","SRN","BRE"]
@@ -43,14 +43,16 @@ all_stations = DataFrame(CSV.File("../../docs/updated_sources.csv"))
 
 
 ################## User selected job #####################
-yr = parse(Int64, ARGS[1])
+yr=2018
+
+# yr = parse(Int64, ARGS[1])
 job_id = join(["_", yr]) # postfix for files 
 
 # wrap all parameters in dictionary to pass collectively
 params = Dict("aws" => "local", "cc_step" => cc_step, "cc_len" => cc_len, "maxlag" => maxlag, "yr" => yr,
         "fs" => fs, "half_win" => half_win, "water_level" => water_level, "sources" => sources,
         "all_stations" => all_stations, "fs" => fs, "rootdir" => rootdir, "network" => network,
-        "OUTDIR" => OUTDIR, "freqmin" => freqmin, "freqmax" => freqmax,"datadir"=>DATADIR,"outdir"=>OUTDIR)# Read in station locations and list source stations
+        "freqmin" => freqmin, "freqmax" => freqmax,"datadir"=>DATADIR,"outdir"=>OUTDIR)# Read in station locations and list source stations
 
 # get date ranges based off user argument input
 dates = nothing
@@ -75,14 +77,15 @@ Tfull = @elapsed map(dayofyear -> correlate_day(dayofyear, params), dates)
 
 
 ############### Stack day correlations ###################
-found_sources = unique([join(split(f,".")[1:2],".") for f in readdir("CORR/")]) # get files to save
+found_sources = unique([join(split(f,".")[1:2],".") for f in readdir("$OUTDIR/CORR/")]) # get files to save
 T = @elapsed pmap(x -> stack_h5(x, job_id, params), found_sources)
 ##########################################################
 
 
 
 ############# Send files to S3 bucket ###################
-stacked_files = glob("nodestack/*/*")
-Transfer = @elapsed pmap(x -> s3_put(aws, "seisbasin", joinpath("BASIN", x), read(x)), stacked_files)
+stacked_files = glob("nodestack/*/*","$OUTDIR")
+println(stacked_files)
+# Transfer = @elapsed pmap(x -> s3_put(aws, "seisbasin", joinpath("BASIN", x), read(x)), stacked_files)
 println("Finished")
 ##########################################################

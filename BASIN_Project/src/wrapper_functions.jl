@@ -6,7 +6,7 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
         Load raw seisdata file and process, saving to fft per frequency
     """
     # unpack needed params
-    rootdir, OUTDIR, samp_rate, all_stations = params["rootdir"], params["OUTDIR"], params["fs"], params["all_stations"]
+    rootdir, OUTDIR, samp_rate, all_stations = params["rootdir"], params["outdir"], params["fs"], params["all_stations"]
     freqmin, freqmax, cc_step, cc_len = params["freqmin"], params["freqmax"], params["cc_step"], params["cc_len"]
     half_win, water_level = params["half_win"], params["water_level"]
 
@@ -60,7 +60,7 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
 end
 
 ############## Correlate two blocks of day waveforms ###################
-function correlate_block(src::Array{String,1}, rec::Array{String,1}, maxlag::Float64)
+function correlate_block(src::Array{String,1}, rec::Array{String,1}, maxlag::Float64, params::Dict=params)
     """ 
         Correlation function for pair of fft data
         - noise filter and stacking
@@ -76,7 +76,7 @@ function correlate_block(src::Array{String,1}, rec::Array{String,1}, maxlag::Flo
                 cc_medianmute!(C, 10.) # remove correlation windows with high noise 
                 stack!(C)
                 pair, comp = name_corr(C), C.comp
-                save_named_corr(C,"$OUTDIR/CORR/$pair/$comp")
+                save_named_corr(C,"$(params["outdir"])/CORR/$pair/$comp")
             catch e
                 # add counter - iterate num bad; print
                 println(e)
@@ -155,7 +155,7 @@ function correlate_day(dd::Date, params::Dict=params)
     else # then data available: Correlate!
         reciever_blocks = collect(Iterators.partition(recievers, convert(Int64, ceil(length(recievers)/nprocs())))) 
         println("Now Correlating $(length(reciever_blocks)) correlation blocks!")
-        Tcorrelate = @elapsed pmap(rec_files -> correlate_block(sources, collect(rec_files), maxlag), reciever_blocks)
+        Tcorrelate = @elapsed pmap(rec_files -> correlate_block(sources, collect(rec_files), maxlag,params), reciever_blocks)
         println("$(length(reciever_blocks)) blocks correlated in $Tcorrelate seconds for $path.")
     end
     if params["aws"]!="local" # if on aws, remove data from EC2 instance
@@ -166,11 +166,11 @@ function correlate_day(dd::Date, params::Dict=params)
 end
 
 ######################## Stacking Routine ############################
-function stack_h5(tf::String, postfix::String, params::Dict)
+function stack_h5(tf::String, postfix::String, params::Dict=params)
     """Stacks all files for source-reciever pair, saves to h5 file by source"""
     
     # extract needed parameters from dict
-    yr, all_stations = params["yr"], params["all_stations"]
+    yr, all_stations,OUTDIR = params["yr"], params["all_stations"],params["outdir"]
     # scrape correlation filenames - get unique sources and receiver combinations
     from_s = glob("CORR/$tf*/*/*","$OUTDIR")
     found_receivers = unique([join(split(f,".")[4:5],".") for f in from_s])
@@ -221,7 +221,7 @@ function stack_h5(tf::String, postfix::String, params::Dict)
                 for comp in components
                     try
                         # load correlations for this receiver by component 
-                        files = glob("CORR/$tf*$rec*/$comp/*.jld2")
+                        files = glob("CORR/$tf*$rec*/$comp/*.jld2","$OUTDIR")
                         if length(files) == 0; continue; end
                         corrs = [load_corr(f, comp) for f in files]
                         corrs = [c for c in corrs if typeof(c) == CorrData]
