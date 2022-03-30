@@ -36,6 +36,7 @@ function LLE_geo(station, df)
     try
         row = df[(findfirst(x -> x==station, df.station)),:]
         lat, lon, el = row.latitude[1], row.longitude[1], row.elevation[1]
+        print(lat,lon,el)
         geo = GeoLoc(lat = float(lat), lon = float(lon), el = float(el))
         return geo
     catch 
