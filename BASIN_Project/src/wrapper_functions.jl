@@ -31,6 +31,12 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
                 catch # trying to sample non 100Hz data at 100 Hz - skip resampling 
                     S = process_raw(data, data.fs[1])
                 end
+
+                # truncate the data to night time (first half of the UTC time for LA stations)
+                # 
+                crap=S.x[1][1:Int(floor(length(S.x[1])/2))]
+                S.x[1]=crap
+                ### Comment out above to keep all of the data
                 R = RawData(S,cc_len,cc_step)
                 SeisNoise.detrend!(R)
                 bandpass!(R,freqmin,freqmax,zerophase=true)
@@ -122,7 +128,9 @@ function correlate_day(dd::Date, params::Dict=params)
         # convert.(String, readdir("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"))) # add directory 
         println(filepath)
         newdir = "$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/"
-        println(newdir)
+        # THIS IS NOT GREAT
+        # chown("ffts",39101,39123) # PLEASE EDIT HERE!!! First integer is the user ID, the second is the Denolle lab group number
+        println(newdir, )
         cp(filepath, newdir,force=true)
         filelist_basin = readdir(newdir)
 
