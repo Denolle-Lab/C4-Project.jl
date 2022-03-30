@@ -92,7 +92,7 @@ function correlate_day(dd::Date, params::Dict=params)
     @eval @everywhere path = $path
 
     # unpack needed params
-    sources, maxlag, OUTDIR, yr, aws = params["sources"], params["maxlag"], params["OUTDIR"], params["yr"], params["aws"]
+    sources, maxlag, OUTDIR, yr, aws = params["sources"], params["maxlag"], params["outdir"], params["yr"], params["aws"]
 
     # here download the data from S3
     if aws!="local"
