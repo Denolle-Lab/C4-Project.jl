@@ -76,7 +76,7 @@ function correlate_block(src::Array{String,1}, rec::Array{String,1}, maxlag::Flo
                 cc_medianmute!(C, 10.) # remove correlation windows with high noise 
                 stack!(C)
                 pair, comp = name_corr(C), C.comp
-                save_named_corr(C,"CORR/$pair/$comp")
+                save_named_corr(C,"$OUTDIR/CORR/$pair/$comp")
             catch e
                 # add counter - iterate num bad; print
                 println(e)
@@ -172,11 +172,11 @@ function stack_h5(tf::String, postfix::String, params::Dict)
     # extract needed parameters from dict
     yr, all_stations = params["yr"], params["all_stations"]
     # scrape correlation filenames - get unique sources and receiver combinations
-    from_s = glob("CORR/$tf*/*/*")
+    from_s = glob("CORR/$tf*/*/*","$OUTDIR")
     found_receivers = unique([join(split(f,".")[4:5],".") for f in from_s])
     components = ["EE","EN","EZ", "NE", "NN","NZ", "ZE", "ZN", "ZZ"]
     fname = join([tf, postfix, ".h5"])
-    filename = joinpath("nodestack/$yr", fname)
+    filename = joinpath("$OUTDIR/nodestack/$yr", fname)
     if !isdir(dirname(filename))
         mkpath(dirname(filename))
     end
@@ -184,7 +184,7 @@ function stack_h5(tf::String, postfix::String, params::Dict)
     h5open(filename, "cw") do file
         source_station = split(tf,".")[2]
         source_loc = LLE_geo(source_station, all_stations)
-        samplef = glob("CORR/$tf*/ZZ/*")[1]
+        samplef = glob("CORR/$tf*/ZZ/*","$OUTDIR")[1]
         C = load_corr(samplef, "ZZ")
         # add metadata information about correlation processing and source location 
         if !haskey(read(file), "meta")
