@@ -43,7 +43,7 @@ all_stations = DataFrame(CSV.File("../../docs/updated_sources.csv"))
 
 
 ################## User selected job #####################
-yr=2018
+yr=2017
 
 # yr = parse(Int64, ARGS[1])
 job_id = join(["_", yr]) # postfix for files 
