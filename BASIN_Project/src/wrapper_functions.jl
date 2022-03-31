@@ -33,8 +33,9 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
                 end
 
                 # truncate the data to night time (first half of the UTC time for LA stations)
-                # 
-                crap=S.x[1][1:Int(floor(length(S.x[1])/2))]
+                # this starts at 5pm. Move to 3pm.!!!! Here i do not change the start time!!!!
+                istart = round(Int,3*3600*S.fs[1])
+                crap=S.x[1][istart+1:istart+Int(floor(length(S.x[1])/2))]
                 S.x[1]=crap
                 ### Comment out above to keep all of the data
                 R = RawData(S,cc_len,cc_step)
@@ -205,6 +206,7 @@ function stack_h5(tf::String, postfix::String, params::Dict=params)
             write(file, "meta/maxlag", C.maxlag)
             write(file, "meta/starttime", Dates.format(u2d(C.t[1]), "yyyy-mm-dd HH:MM:SS"))
             write(file, "meta/samp_freq", C.fs)
+            println(source_loc.lon)
             if !isnothing(source_loc)
                 write(file, "meta/lon", source_loc.lon)
                 write(file, "meta/lat", source_loc.lat)
