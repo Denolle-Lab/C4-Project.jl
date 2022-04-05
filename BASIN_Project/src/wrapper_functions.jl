@@ -125,6 +125,7 @@ function correlate_day(dd::Date, params::Dict=params)
     else  # Local / workstation use
 
           # filepaths for nodes
+<<<<<<< Updated upstream
         filepath = "$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"
         # convert.(String, readdir("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"))) # add directory 
         println(filepath)
@@ -133,6 +134,14 @@ function correlate_day(dd::Date, params::Dict=params)
         # chown("ffts",39101,39123) # PLEASE EDIT HERE!!! First integer is the user ID, the second is the Denolle lab group number
         println(newdir, )
         cp(filepath, newdir,force=true)
+=======
+        filepath = joinpath.("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/", 
+        convert.(String, readdir("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"))) # add directory 
+        newdir = joinpath("$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/") # use new AWS functions
+        mkpath("$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/")
+        command=`cp $filepath $(params["outdir"])/continuous_waveforms/$(yr)/$(path)/`
+        run(command)
+>>>>>>> Stashed changes
         filelist_basin = readdir(newdir)
 
 
@@ -149,6 +158,7 @@ function correlate_day(dd::Date, params::Dict=params)
     T_b = @elapsed pmap(f -> preprocess(f, false, params, path), broadbands)
     T_a = @elapsed pmap(f -> preprocess(f, true, params, path), accelerometers)
     println("Preprocessing Completed in $(T_b + T_a) seconds.")
+    println(path)
 
     # get indices for block correlation
     if params["aws"]!="local"
@@ -157,6 +167,7 @@ function correlate_day(dd::Date, params::Dict=params)
     fft_paths = glob("ffts/$path/*", "$OUTDIR")
     end
     sources = filter(f -> any(occursin.(sources, f)), fft_paths)
+    println(sources)
     recievers = filter(f -> !any(occursin.(sources, f)), fft_paths)
     print("There are $(length(recievers)) available for correlation.")
     if length(recievers) == 0 # if no ffts available for that day 
