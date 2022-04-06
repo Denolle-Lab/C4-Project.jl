@@ -84,7 +84,7 @@ T = @elapsed pmap(x -> stack_h5(x, job_id, params), found_sources)
 
 
 ############# Send files to S3 bucket ###################
-stacked_files = glob("nodestack/*/*","$OUTDIR")
+stacked_files = glob("nodestack2/*/*","$OUTDIR")
 println(stacked_files)
 # Transfer = @elapsed pmap(x -> s3_put(aws, "seisbasin", joinpath("BASIN", x), read(x)), stacked_files)
 println("Finished")
