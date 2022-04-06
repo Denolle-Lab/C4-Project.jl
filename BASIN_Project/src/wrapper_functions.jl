@@ -34,9 +34,9 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
 
                 # truncate the data to night time (first half of the UTC time for LA stations)
                 # this starts at 5pm. Move to 3pm.!!!! Here i do not change the start time!!!!
-                istart = round(Int,3*3600*S.fs[1])
-                crap=S.x[1][istart+1:istart+Int(floor(length(S.x[1])/2))]
-                S.x[1]=crap
+                # istart = round(Int,3*3600*S.fs[1])
+                # crap=S.x[1][istart+1:istart+Int(floor(length(S.x[1])/2))]
+                # S.x[1]=crap
                 ### Comment out above to keep all of the data
                 R = RawData(S,cc_len,cc_step)
                 SeisNoise.detrend!(R)
