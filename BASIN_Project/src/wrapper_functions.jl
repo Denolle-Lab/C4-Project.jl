@@ -125,7 +125,6 @@ function correlate_day(dd::Date, params::Dict=params)
     else  # Local / workstation use
 
           # filepaths for nodes
-<<<<<<< Updated upstream
         filepath = "$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"
         # convert.(String, readdir("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"))) # add directory 
         println(filepath)
@@ -134,14 +133,6 @@ function correlate_day(dd::Date, params::Dict=params)
         # chown("ffts",39101,39123) # PLEASE EDIT HERE!!! First integer is the user ID, the second is the Denolle lab group number
         println(newdir, )
         cp(filepath, newdir,force=true)
-=======
-        filepath = joinpath.("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/", 
-        convert.(String, readdir("$(params["datadir"])/continuous_waveforms/$(yr)/$(path)/"))) # add directory 
-        newdir = joinpath("$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/") # use new AWS functions
-        mkpath("$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/")
-        command=`cp $filepath $(params["outdir"])/continuous_waveforms/$(yr)/$(path)/`
-        run(command)
->>>>>>> Stashed changes
         filelist_basin = readdir(newdir)
 
 
