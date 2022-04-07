@@ -131,9 +131,9 @@ function correlate_day(dd::Date, params::Dict=params)
         newdir = "$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/"
         # THIS IS NOT GREAT
         # chown("ffts",39101,39123) # PLEASE EDIT HERE!!! First integer is the user ID, the second is the Denolle lab group number
-        println(newdir, )
+        mkdpath(newdir)
         cp(filepath, newdir,force=true)
-        filelist_basin = readdir(newdir)
+        # filelist_basin = readdir(newdir)
 
 
     end
