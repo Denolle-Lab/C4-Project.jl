@@ -33,12 +33,21 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
                 end
 
                 # truncate the data to night time (first half of the UTC time for LA stations)
-                # this starts at 5pm. Move to 3pm.!!!! Here i do not change the start time!!!!
-                # istart = round(Int,3*3600*S.fs[1])
-                # crap=S.x[1][istart+1:istart+Int(floor(length(S.x[1])/2))]
-                # S.x[1]=crap
+                # this starts at 5pm. Move to 8pm.!!!! Here i do not change the start time!!!!
+                println("frequency of sampling ",S.fs[1])
+                istart = round(Int,3.0*3600.0*S.fs[1])
+                println("whats up with istart?")
+                println(istart," ",3*3600," ",S.fs[1])
+		println("max index we want")
+                println(istart+Int(floor(length(S.x[1])/2)))
+		println("but the length of the array is")
+		println(length(S.x[1]))
+                crap=S.x[1][istart+1:istart+Int(floor(length(S.x[1])/2))]
+                S.x[1]=crap
                 ### Comment out above to keep all of the data
+                println(S)
                 R = RawData(S,cc_len,cc_step)
+                println("converted to raw data")
                 SeisNoise.detrend!(R)
                 bandpass!(R,freqmin,freqmax,zerophase=true)
                 SeisNoise.taper!(R)
@@ -50,6 +59,11 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
                 end
                 coherence!(FFT,half_win, water_level) # try no coherence ??
                 try # save fft 
+		    crap=joinpath(OUTDIR, "ffts")
+		    println(crap)
+		    #if isdir(crap)==false
+		   # 	mkpath(crap)
+		   # end
                     root_fft = joinpath(OUTDIR, "ffts/$path/")
                     save_fft(FFT, root_fft)
                 catch e
@@ -85,7 +99,7 @@ function correlate_block(src::Array{String,1}, rec::Array{String,1}, maxlag::Flo
                 pair, comp = name_corr(C), C.comp
                 save_named_corr(C,"$(params["outdir"])/CORR/$pair/$comp")
             catch e
-                # add counter - iterate num bad; print
+                # add counter - iterate num bad print
                 println(e)
             end
         end
@@ -94,7 +108,8 @@ end
 
 #################### Downloads and Correlates day of data ###########################
 function correlate_day(dd::Date, params::Dict=params)
-    """ Wrapper function for daily correlations"""
+    """ Wrapper function for daily correlations 
+    """
     path = join([Dates.year(dd),lpad(Dates.dayofyear(dd),3,"0")],"_") # Yields "YEAR_JDY"
     @eval @everywhere path = $path
 
@@ -133,8 +148,10 @@ function correlate_day(dd::Date, params::Dict=params)
         # chown("ffts",39101,39123) # PLEASE EDIT HERE!!! First integer is the user ID, the second is the Denolle lab group number
         println(newdir, )
         # cp(filepath, newdir,force=true)
-        # filelist_basin = readdir(newdir)
-
+        # println(newdir)
+ 	# println("moved files") 
+        filelist_basin = readdir(newdir)
+        println(filelist_basin)
 
     end
     # preprocess data
@@ -172,8 +189,7 @@ function correlate_day(dd::Date, params::Dict=params)
     if params["aws"]!="local" # if on aws, remove data from EC2 instance
     rm("/home/ubuntu/data/continuous_waveforms", recursive=true) # cleanup raw data
     else
-        rm("$OUTDIR/continuous_waveforms/$yr/$path", recursive=true) # cleanup raw data on the SSD working disk
-        rm("$OUTDIR/ffts/$yr/$path", recursive=true) # cleanup fft data on the SSD working disk
+    rm("$OUTDIR/continuous_waveforms/$yr/$path", recursive=true) # cleanup raw data on the SSD working disk
     end
 end
 
