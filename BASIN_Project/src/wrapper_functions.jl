@@ -131,8 +131,8 @@ function correlate_day(dd::Date, params::Dict=params)
         newdir = "$(params["outdir"])/continuous_waveforms/$(yr)/$(path)/"
         # THIS IS NOT GREAT
         # chown("ffts",39101,39123) # PLEASE EDIT HERE!!! First integer is the user ID, the second is the Denolle lab group number
-        mkdpath(newdir)
-        cp(filepath, newdir,force=true)
+        println(newdir, )
+        # cp(filepath, newdir,force=true)
         # filelist_basin = readdir(newdir)
 
 
@@ -172,7 +172,8 @@ function correlate_day(dd::Date, params::Dict=params)
     if params["aws"]!="local" # if on aws, remove data from EC2 instance
     rm("/home/ubuntu/data/continuous_waveforms", recursive=true) # cleanup raw data
     else
-    rm("$OUTDIR/continuous_waveforms/$yr/$path", recursive=true) # cleanup raw data on the SSD working disk
+        rm("$OUTDIR/continuous_waveforms/$yr/$path", recursive=true) # cleanup raw data on the SSD working disk
+        rm("$OUTDIR/ffts/$yr/$path", recursive=true) # cleanup fft data on the SSD working disk
     end
 end
 
