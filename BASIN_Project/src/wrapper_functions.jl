@@ -151,7 +151,9 @@ function correlate_day(dd::Date, params::Dict=params)
     else
     allf = glob("continuous_waveforms/$yr/$path/*", "$OUTDIR") # if on local
     end
-    broadbands = filter(x -> any(occursin.(sources, x)) && !occursin("Q0066",x), allf)
+    broadbands = filter(x -> !occursin("Q0066",x), allf)
+    print("printing the name of the velocitmeters")
+    println(broadbands)
     accelerometers = filter(x -> any(occursin("Q0066",x)), allf)
 
     T_b = @elapsed pmap(f -> preprocess(f, false, params, path), broadbands)
@@ -166,15 +168,15 @@ function correlate_day(dd::Date, params::Dict=params)
     fft_paths = glob("ffts/$path/*", "$OUTDIR")
     end
     sources = filter(f -> any(occursin.(sources, f)), fft_paths)
-    recievers = filter(f -> !any(occursin.(sources, f)), fft_paths)
-    print("There are $(length(recievers)) available for correlation.")
-    if length(recievers) == 0 # if no ffts available for that day 
+    receivers = filter(f -> !any(occursin.(sources, f)), fft_paths)
+    print("There are $(length(receivers)) available for correlation.")
+    if length(receivers) == 0 # if no ffts available for that day 
         return 1
     else # then data available: Correlate!
-        reciever_blocks = collect(Iterators.partition(recievers, convert(Int64, ceil(length(recievers)/nprocs())))) 
-        println("Now Correlating $(length(reciever_blocks)) correlation blocks!")
+        receiver_blocks = collect(Iterators.partition(receivers, convert(Int64, ceil(length(recievers)/nprocs())))) 
+        println("Now Correlating $(length(receiver_blocks)) correlation blocks!")
         Tcorrelate = @elapsed pmap(rec_files -> correlate_block(sources, collect(rec_files), maxlag,params), reciever_blocks)
-        println("$(length(reciever_blocks)) blocks correlated in $Tcorrelate seconds for $path.")
+        println("$(length(receiver_blocks)) blocks correlated in $Tcorrelate seconds for $path.")
     end
     if params["aws"]!="local" # if on aws, remove data from EC2 instance
     rm("/home/ubuntu/data/continuous_waveforms", recursive=true) # cleanup raw data
