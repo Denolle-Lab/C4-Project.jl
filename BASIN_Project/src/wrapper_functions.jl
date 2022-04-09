@@ -34,18 +34,8 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
 
                 # truncate the data to night time (first half of the UTC time for LA stations)
                 # this starts at 5pm. Move to 8pm.!!!! Here i do not change the start time!!!!
-                println("frequency of sampling ",S.fs[1])
-                istart = round(Int,3.0*3600.0*S.fs[1])
-                println("whats up with istart?")
-                println(istart," ",3*3600," ",S.fs[1])
-		println("max index we want")
-                println(istart+Int(floor(length(S.x[1])/2)))
-		println("but the length of the array is")
-		println(length(S.x[1]))
-                crap=S.x[1][istart+1:istart+Int(floor(length(S.x[1])/2))]
-                S.x[1]=crap
+                sync!(S,s=u2d(S.t[1][1,2]*1e-6)+Dates.Hour(3),t=u2d(S.t[1][1,2]*1e-6)+Dates.Hour(12))
                 ### Comment out above to keep all of the data
-                println(S)
                 R = RawData(S,cc_len,cc_step)
                 println("converted to raw data")
                 SeisNoise.detrend!(R)
@@ -59,11 +49,10 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
                 end
                 coherence!(FFT,half_win, water_level) # try no coherence ??
                 try # save fft 
-		    crap=joinpath(OUTDIR, "ffts")
-		    println(crap)
-		    #if isdir(crap)==false
-		   # 	mkpath(crap)
-		   # end
+                    crap=joinpath(OUTDIR, "ffts")
+                    if isdir(crap)==false
+                        mkpath(crap)
+                    end
                     root_fft = joinpath(OUTDIR, "ffts/$path/")
                     save_fft(FFT, root_fft)
                 catch e
@@ -148,8 +137,6 @@ function correlate_day(dd::Date, params::Dict=params)
         # chown("ffts",39101,39123) # PLEASE EDIT HERE!!! First integer is the user ID, the second is the Denolle lab group number
         println(newdir, )
         # cp(filepath, newdir,force=true)
-        # println(newdir)
- 	# println("moved files") 
         filelist_basin = readdir(newdir)
         println(filelist_basin)
 
@@ -175,7 +162,6 @@ function correlate_day(dd::Date, params::Dict=params)
     fft_paths = glob("ffts/$path/*", "$OUTDIR")
     end
     sources = filter(f -> any(occursin.(sources, f)), fft_paths)
-    println(sources)
     recievers = filter(f -> !any(occursin.(sources, f)), fft_paths)
     print("There are $(length(recievers)) available for correlation.")
     if length(recievers) == 0 # if no ffts available for that day 
@@ -189,7 +175,8 @@ function correlate_day(dd::Date, params::Dict=params)
     if params["aws"]!="local" # if on aws, remove data from EC2 instance
     rm("/home/ubuntu/data/continuous_waveforms", recursive=true) # cleanup raw data
     else
-    rm("$OUTDIR/continuous_waveforms/$yr/$path", recursive=true) # cleanup raw data on the SSD working disk
+    rm("$OUTDIR/ffts/$path", recursive=true) # cleanup raw data on the SSD working disk
+    # rm("$OUTDIR/continuous_waveforms/$yr/$path", recursive=true) # cleanup raw data on the SSD working disk
     end
 end
 
