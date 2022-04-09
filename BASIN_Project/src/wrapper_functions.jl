@@ -37,7 +37,6 @@ function preprocess(file::String,  accelerometer::Bool=false, params::Dict=param
                 sync!(S,s=u2d(S.t[1][1,2]*1e-6)+Dates.Hour(3),t=u2d(S.t[1][1,2]*1e-6)+Dates.Hour(12))
                 ### Comment out above to keep all of the data
                 R = RawData(S,cc_len,cc_step)
-                println("converted to raw data")
                 SeisNoise.detrend!(R)
                 bandpass!(R,freqmin,freqmax,zerophase=true)
                 SeisNoise.taper!(R)
@@ -152,7 +151,7 @@ function correlate_day(dd::Date, params::Dict=params)
     allf = glob("continuous_waveforms/$yr/$path/*", "$OUTDIR") # if on local
     end
     broadbands = filter(x -> !occursin("Q0066",x), allf)
-    print("printing the name of the velocitmeters")
+    println("printing the filenames of the velocitmeters")
     println(broadbands)
     accelerometers = filter(x -> any(occursin("Q0066",x)), allf)
 
@@ -174,7 +173,7 @@ function correlate_day(dd::Date, params::Dict=params)
         return 1
     else # then data available: Correlate!
         receiver_blocks = collect(Iterators.partition(receivers, convert(Int64, ceil(length(receivers)/nprocs())))) 
-        println("Now Correlating $(length(receiver_blocks)) correlation blocks!")
+        # println("Now Correlating $(length(receiver_blocks)) correlation blocks!")
         Tcorrelate = @elapsed pmap(rec_files -> correlate_block(sources, collect(rec_files), maxlag,params), receiver_blocks)
         println("$(length(receiver_blocks)) blocks correlated in $Tcorrelate seconds for $path.")
     end
