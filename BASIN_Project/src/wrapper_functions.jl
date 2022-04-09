@@ -173,9 +173,9 @@ function correlate_day(dd::Date, params::Dict=params)
     if length(receivers) == 0 # if no ffts available for that day 
         return 1
     else # then data available: Correlate!
-        receiver_blocks = collect(Iterators.partition(receivers, convert(Int64, ceil(length(recievers)/nprocs())))) 
+        receiver_blocks = collect(Iterators.partition(receivers, convert(Int64, ceil(length(receivers)/nprocs())))) 
         println("Now Correlating $(length(receiver_blocks)) correlation blocks!")
-        Tcorrelate = @elapsed pmap(rec_files -> correlate_block(sources, collect(rec_files), maxlag,params), reciever_blocks)
+        Tcorrelate = @elapsed pmap(rec_files -> correlate_block(sources, collect(rec_files), maxlag,params), receiver_blocks)
         println("$(length(receiver_blocks)) blocks correlated in $Tcorrelate seconds for $path.")
     end
     if params["aws"]!="local" # if on aws, remove data from EC2 instance
@@ -188,7 +188,7 @@ end
 
 ######################## Stacking Routine ############################
 function stack_h5(tf::String, postfix::String, params::Dict=params)
-    """Stacks all files for source-reciever pair, saves to h5 file by source"""
+    """Stacks all files for source-receiver pair, saves to h5 file by source"""
     
     # extract needed parameters from dict
     yr, all_stations,OUTDIR = params["yr"], params["all_stations"],params["outdir"]
@@ -225,7 +225,7 @@ function stack_h5(tf::String, postfix::String, params::Dict=params)
                 write(file, "meta/el", source_loc.el)
             end
         end
-        # iterate through node recievers 
+        # iterate through node receivers 
         for rec in found_receivers
             try
                 # sample_r = glob("CORR/$tf*$rec*/ZZ/*")[1]
