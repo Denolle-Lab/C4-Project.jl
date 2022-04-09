@@ -77,6 +77,10 @@ function correlate_block(src::Array{String,1}, rec::Array{String,1}, maxlag::Flo
         - saves directly to disk: ensure directory is correct if not on AWS
     """
     # load sources and recievers
+    crap=joinpath("$(params["outdir"])/CORR")
+    if isdir(crap)==false
+        mkpath(crap)
+    end
     sources = map(x-> load_fft(x, string(x[end-7:end-5])), src)
     receivers = map(x-> load_fft(x, string(x[end-7:end-5])), rec)
     for source in sources
