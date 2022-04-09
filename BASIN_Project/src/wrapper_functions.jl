@@ -148,7 +148,7 @@ function correlate_day(dd::Date, params::Dict=params)
     allf = glob("continuous_waveforms/$yr/$path/*", "$OUTDIR") # if on local
     end
     broadbands = filter(x -> any(occursin.(sources, x)) && !occursin("Q0066",x), allf)
-    accelerometers = [f for f in allf if !any(occursin.(f, broadbands))]
+    accelerometers = filter(x -> any(occursin("Q0066",x)), allf)
 
     T_b = @elapsed pmap(f -> preprocess(f, false, params, path), broadbands)
     T_a = @elapsed pmap(f -> preprocess(f, true, params, path), accelerometers)
