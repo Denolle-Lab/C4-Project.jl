@@ -86,7 +86,7 @@ function correlate_block(src::Array{String,1}, rec::Array{String,1}, maxlag::Flo
         for receiver in receivers
             try
                 C = correlate(source,receiver,maxlag)
-                cc_medianmute!(C, 10.) # remove correlation windows with high noise 
+                # cc_medianmute!(C, 10.) # remove correlation windows with high noise 
                 stack!(C)
                 pair, comp = name_corr(C), C.comp
                 save_named_corr(C,"$(params["outdir"])/CORR/$pair/$comp")
@@ -252,7 +252,7 @@ function stack_h5(tf::String, postfix::String, params::Dict=params)
                         if isnothing(corr_sum); continue; end # if corr_sum fails to return, skip component
 
                         dims = size(corr_sum.corr)
-                        cc_medianmute2!(corr_sum, 3., false) # skip metadata copy which errors on sum_corrs
+                        # cc_medianmute2!(corr_sum, 3., false) # skip metadata copy which errors on sum_corrs
                         println("$(length(corrs)) day correlations. Dims: $dims. ",
                                 "Threw out $(dims[2]-size(corr_sum.corr)[2]) day windows.")
 
