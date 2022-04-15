@@ -1,0 +1,16 @@
+Readme for polarization analysis for basin
+
+Polarization analysis based on John Vidale's 1986 paper
+
+requirements to run the scripts: python with
+- obspy
+- scipy
+- numpy
+- h5py
+- pandas
+- matplotlib
+
+steps:
+1. Edit input parameters in extract_polarization_params_DATA.py and run it.
+   This should produce a csv file with ellipticities, azimuths, RMS, per time window, per station (big file) 
+2. Edit input parameters in plot_pol.py to plot, in particular, adapt the parameter descriptivestring to fit the output file from the previous plot. Run to plot the polarization results.
