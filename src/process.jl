@@ -9,7 +9,7 @@ function fftderivative(A::CorrData)
     taper!(C)
     F = fft(C.corr,1)
     F .*= fftfreq(length(C.corr)).* 1im .* 2π
-    C.corr = real.(ifft(F,1))/(C.fs^2)
+    C.corr = real.(ifft(F,1))#/(C.fs^2)
     return C
 end
 # gets location and maximum amplitude for corrs in array
