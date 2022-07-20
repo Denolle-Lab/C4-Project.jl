@@ -4,6 +4,7 @@ export preprocess, correlate_block, correlate_day, stack_h5
 function preprocess(file::String,  accelerometer::Bool=false, params::Dict=params, path::String=path)
     """
         Load raw seisdata file and process, saving to fft per frequency
+    this is exactly the same as preprocess2 from SeisCore.jl
     """
     # unpack needed params
     rootdir, OUTDIR, samp_rate, all_stations = params["rootdir"], params["outdir"], params["fs"], params["all_stations"]
